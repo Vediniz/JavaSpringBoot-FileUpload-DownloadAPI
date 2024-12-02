@@ -2,7 +2,10 @@ package com.github.vediniz.uploadfileproject.service;
 
 import com.github.vediniz.uploadfileproject.config.FileStorageConfig;
 import com.github.vediniz.uploadfileproject.exceptions.FileStorageException;
+import com.github.vediniz.uploadfileproject.exceptions.NewFileNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,14 +24,11 @@ public class FileStorageService {
 
     @Autowired
     public FileStorageService(FileStorageConfig fileStorageConfig) {
-
         if (fileStorageConfig.getUploadDir() == null) {
             throw new FileStorageException("Upload directory not configured");
         }
-
         this.fileStorageLocation = Paths.get(fileStorageConfig.getUploadDir())
                 .toAbsolutePath().normalize();
-
         try {
             Files.createDirectories(this.fileStorageLocation);
         } catch (Exception e) {
@@ -40,7 +40,6 @@ public class FileStorageService {
     public String storeFile(MultipartFile file) {
         String filename = StringUtils.cleanPath(file.getOriginalFilename());
         try {
-            // Filename..txt
             if (filename.contains("..")) {
                 throw new FileStorageException(
                         "Sorry! Filename contains invalid path sequence " + filename);
@@ -51,6 +50,20 @@ public class FileStorageService {
         } catch (Exception e) {
             throw new FileStorageException(
                     "Could not store file " + filename + ". Please try again!", e);
+        }
+    }
+
+    public Resource loadFileAsResource(String filename) {
+        try {
+            Path filePath = this.fileStorageLocation.resolve(filename).normalize();
+            UrlResource resource = new UrlResource(filePath.toUri());
+            if (resource.exists() && resource.isReadable()) {
+                return resource;
+            } else {
+                throw new NewFileNotFoundException ("File not found: " + filename);
+            }
+        } catch (Exception e) {
+            throw new NewFileNotFoundException("File not found: " + filename, e);
         }
     }
 }
