@@ -24,7 +24,7 @@ Clone the repository and run it.
 
 ~~~bash
 # Clone the repository 
-$ git clone git@github.com:Vediniz/JavaSpringBoot-FileUpload-DownloadAPI.git
+$ git clone git@github.com:Vediniz/JavaSpringBoot-FileUpload_n_Download_API.git
 ~~~
 
 ## **Using the Application**
